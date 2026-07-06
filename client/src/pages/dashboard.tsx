@@ -68,7 +68,7 @@ const Dashboard = () => {
   const totalAssets = 150;
   const activeAssets = 98;
   const maintenanceAssets = 32;
-  const totalValue = '$125,000';
+  const totalValue = 'ETB 125,000';
   const growthRate = '+12.5%';
 
   const stats = [
