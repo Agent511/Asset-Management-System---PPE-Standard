@@ -80,7 +80,7 @@ Navigate to the backend directory, install dependencies, run migrations, and sta
 ```bash
 cd server
 npm install
-npm run db:migrate   # Run database migrations to set up asset tables
+npm run migrate   # Run database migrations to set up asset tables
 npm run dev          # Starts server on http://localhost:5000
 ```
 
