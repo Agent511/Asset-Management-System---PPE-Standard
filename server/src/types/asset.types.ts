@@ -1,16 +1,17 @@
-export  interface AssetRegistrationData {
+// src/types/asset.types.ts
+export interface AssetRegistrationData {
   // Core Fields
   assetName: string;
   assetDescription?: string;
   category: string;
-  subcategory?: string;
+  subcategory: string;
   status: string;
   brand?: string;
+  department: string;
   
-  // IT Equipment
+  // IT Equipment Fields
   modelNumber?: string;
   serialNumber?: string;
-  assetType?: string;
   processor?: string;
   ram?: string;
   storage?: string;
@@ -19,7 +20,7 @@ export  interface AssetRegistrationData {
   connectivity?: string;
   warrantyExpiry?: string;
   
-  // Vehicle
+  // Vehicle Fields
   registrationNumber?: string;
   make?: string;
   model?: string;
@@ -33,8 +34,8 @@ export  interface AssetRegistrationData {
   insurancePolicyNumber?: string;
   insuranceExpiry?: string;
   registrationExpiry?: string;
-  
-  // Machinery
+
+  // Machinery Fields
   machineryType?: string;
   powerRating?: string;
   voltage?: string;
@@ -45,16 +46,16 @@ export  interface AssetRegistrationData {
   safetyCertification?: string;
   lastInspection?: string;
   nextInspection?: string;
-  
-  // Furniture
+
+  // Furniture Fields
   material?: string;
   color?: string;
   dimensionsFurniture?: string;
   weightCapacity?: string;
   assemblyRequired?: string;
   warrantyPeriod?: string;
-  
-  // Building
+
+  // Building Fields
   buildingType?: string;
   floorArea?: string;
   numberOfFloors?: string;
@@ -64,8 +65,8 @@ export  interface AssetRegistrationData {
   utilities?: string;
   parkingAvailable?: string;
   securityFeatures?: string;
-  
-  // Land
+
+  // Land Fields
   landArea?: string;
   landUse?: string;
   zoning?: string;
@@ -73,19 +74,12 @@ export  interface AssetRegistrationData {
   topography?: string;
   utilitiesAvailable?: string;
   accessibility?: string;
-  
-  // Office Equipment
+
+  // Office Equipment Fields
   equipmentType?: string;
   powerConsumption?: string;
   connectivityOffice?: string;
   paperCapacity?: string;
   printSpeed?: string;
   functions?: string;
-}
-
-export interface ApiResponse {
-  success: boolean;
-  message: string;
-  data?: any;
-  error?: string;
 }

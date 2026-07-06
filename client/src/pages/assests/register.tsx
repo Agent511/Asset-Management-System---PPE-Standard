@@ -1,12 +1,12 @@
 // pages/assests/register.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../../components/navbar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Save, X, Info, Hash, Tag, FileText, Box, Layers, 
   Cpu, Monitor, Wifi, Car, Fuel, Gauge, Users, 
   Building2, Sofa, Printer, HardDrive, Clock, 
-  Warehouse, Trees, Home, Briefcase 
+  Warehouse, Trees, Home, Briefcase, Building 
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -19,11 +19,14 @@ interface FormData {
   subcategory: string;
   status: string;
   brand: string;
+  department: string;
   
   // IT Equipment Fields
   modelNumber?: string;
-  assetType?: string;
+  serialNumber?: string;
   processor?: string;
+  ram?: string;
+  storage?: string;
   operatingSystem?: string;
   monitorSize?: string;
   connectivity?: string;
@@ -94,6 +97,11 @@ interface FormData {
 }
 
 const Register = () => { 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [assetId, setAssetId] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState<FormData>({
     assetId: 'IT_EQ_00043',
     assetName: '',
@@ -102,12 +110,128 @@ const Register = () => {
     subcategory: '',
     status: 'Active',
     brand: '',
+    department: '',
   });
-  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Check if we're in edit mode
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const id = searchParams.get('id');
+    if (id) {
+      setIsEditMode(true);
+      setAssetId(id);
+      fetchAssetData(id);
+    }
+  }, [location]);
+
+  // Fetch asset data for editing
+  const fetchAssetData = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:5000/api/assets/${id}`);
+      if (response.data.success) {
+        const asset = response.data.data;
+        
+        // Map the data from API to form data
+        const mappedData: FormData = {
+          assetId: asset.asset_code,
+          assetName: asset.asset_name,
+          assetDescription: asset.asset_description || '',
+          category: asset.category_name,
+          subcategory: asset.subcategory_name || '',
+          status: asset.status_name,
+          brand: asset.details?.brand || '',
+          department: asset.department_name || '',
+          
+          // IT Equipment
+          modelNumber: asset.details?.model_number || '',
+          serialNumber: asset.details?.serial_number || '',
+          processor: asset.details?.processor || '',
+          ram: asset.details?.ram || '',
+          storage: asset.details?.storage || '',
+          operatingSystem: asset.details?.operating_system || '',
+          monitorSize: asset.details?.monitor_size || '',
+          connectivity: asset.details?.connectivity || '',
+          warrantyExpiry: asset.details?.warranty_expiry_date ? asset.details.warranty_expiry_date.split('T')[0] : '',
+          
+          // Vehicle
+          registrationNumber: asset.details?.registration_number || '',
+          make: asset.details?.make || '',
+          model: asset.details?.model || '',
+          manufacturingYear: asset.details?.manufacturing_year || '',
+          engineNumber: asset.details?.engine_number || '',
+          vinNumber: asset.details?.vin_number || '',
+          fuelType: asset.details?.fuel_type || '',
+          engineCapacity: asset.details?.engine_capacity || '',
+          transmission: asset.details?.transmission || '',
+          seatingCapacity: asset.details?.seating_capacity || '',
+          insurancePolicyNumber: asset.details?.insurance_policy_number || '',
+          insuranceExpiry: asset.details?.insurance_expiry_date ? asset.details.insurance_expiry_date.split('T')[0] : '',
+          registrationExpiry: asset.details?.registration_expiry_date ? asset.details.registration_expiry_date.split('T')[0] : '',
+          
+          // Machinery
+          machineryType: asset.details?.machinery_type || '',
+          powerRating: asset.details?.power_rating || '',
+          voltage: asset.details?.voltage || '',
+          phase: asset.details?.phase || '',
+          weight: asset.details?.weight || '',
+          dimensions: asset.details?.dimensions || '',
+          operatingTemperature: asset.details?.operating_temperature || '',
+          safetyCertification: asset.details?.safety_certification || '',
+          lastInspection: asset.details?.last_inspection_date ? asset.details.last_inspection_date.split('T')[0] : '',
+          nextInspection: asset.details?.next_inspection_date ? asset.details.next_inspection_date.split('T')[0] : '',
+          
+          // Furniture
+          material: asset.details?.material || '',
+          color: asset.details?.color || '',
+          dimensionsFurniture: asset.details?.dimensions || '',
+          weightCapacity: asset.details?.weight_capacity || '',
+          assemblyRequired: asset.details?.assembly_required ? 'Yes' : 'No',
+          warrantyPeriod: asset.details?.warranty_period || '',
+          
+          // Building
+          buildingType: asset.details?.building_type || '',
+          floorArea: asset.details?.floor_area || '',
+          numberOfFloors: asset.details?.number_of_floors || '',
+          constructionYear: asset.details?.construction_year || '',
+          buildingMaterial: asset.details?.building_material || '',
+          occupancyType: asset.details?.occupancy_type || '',
+          utilities: asset.details?.utilities || '',
+          parkingAvailable: asset.details?.parking_available ? 'Yes' : 'No',
+          securityFeatures: asset.details?.security_features || '',
+          
+          // Land
+          landArea: asset.details?.land_area || '',
+          landUse: asset.details?.land_use || '',
+          zoning: asset.details?.zoning || '',
+          soilType: asset.details?.soil_type || '',
+          topography: asset.details?.topography || '',
+          utilitiesAvailable: asset.details?.utilities_available || '',
+          accessibility: asset.details?.accessibility || '',
+          
+          // Office Equipment
+          equipmentType: asset.details?.equipment_type || '',
+          powerConsumption: asset.details?.power_consumption || '',
+          connectivityOffice: asset.details?.connectivity || '',
+          paperCapacity: asset.details?.paper_capacity || '',
+          printSpeed: asset.details?.print_speed || '',
+          functions: asset.details?.functions || '',
+        };
+        
+        setFormData(mappedData);
+      }
+    } catch (error) {
+      console.error('Error fetching asset data:', error);
+      alert('Failed to load asset data for editing');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Auto-generate Asset ID based on category
   const generateAssetId = (category: string) => {
@@ -126,15 +250,17 @@ const Register = () => {
   };
 
   const handleCategoryChange = (category: string) => {
-    const newAssetId = generateAssetId(category);
+    const newAssetId = isEditMode ? formData.assetId : generateAssetId(category);
     setFormData({
       ...formData,
       category,
       assetId: newAssetId,
       // Reset all category-specific fields
       modelNumber: '',
-      assetType: '',
+      serialNumber: '',
       processor: '',
+      ram: '',
+      storage: '',
       operatingSystem: '',
       monitorSize: '',
       connectivity: '',
@@ -199,15 +325,20 @@ const Register = () => {
   };
 
   const handleReset = () => {
-    setFormData({
-      assetId: generateAssetId(formData.category || ''),
-      assetName: '',
-      assetDescription: '',
-      category: formData.category,
-      subcategory: '',
-      status: 'Active',
-      brand: '',
-    });
+    if (isEditMode && assetId) {
+      fetchAssetData(assetId);
+    } else {
+      setFormData({
+        assetId: generateAssetId(formData.category || ''),
+        assetName: '',
+        assetDescription: '',
+        category: formData.category,
+        subcategory: '',
+        status: 'Active',
+        brand: '',
+        department: '',
+      });
+    }
     setSubmitted(false);
   };
 
@@ -226,11 +357,14 @@ const Register = () => {
         subcategory: formData.subcategory,
         status: formData.status,
         brand: formData.brand,
+        department: formData.department,
         
         // IT Equipment
         modelNumber: formData.modelNumber,
-        assetType: formData.assetType,
+        serialNumber: formData.serialNumber,
         processor: formData.processor,
+        ram: formData.ram,
+        storage: formData.storage,
         operatingSystem: formData.operatingSystem,
         monitorSize: formData.monitorSize,
         connectivity: formData.connectivity,
@@ -300,26 +434,36 @@ const Register = () => {
         functions: formData.functions,
       };
 
-      console.log('Sending data to API:', apiData);
-
-      const response = await axios.post('http://localhost:5000/api/assets/register', apiData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      let response;
+      
+      if (isEditMode && assetId) {
+        // Update existing asset
+        response = await axios.put(`http://localhost:5000/api/assets/${assetId}`, apiData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } else {
+        // Register new asset
+        response = await axios.post('http://localhost:5000/api/assets/register', apiData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
       if (response.data.success) {
         setSubmitSuccess(true);
-        alert(`✅ Asset registered successfully!\nAsset Code: ${response.data.data.assetCode}`);
+        alert(`✅ Asset ${isEditMode ? 'updated' : 'registered'} successfully!\nAsset Code: ${response.data.data.assetCode}`);
         navigate('/assets');
         handleReset();
         setSubmitted(true);
-        console.log('Asset registered:', response.data);
+        console.log(`Asset ${isEditMode ? 'updated' : 'registered'}:`, response.data);
       }
 
     } catch (error: any) {
-      console.error('Error registering asset:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to register asset';
+      console.error(`Error ${isEditMode ? 'updating' : 'registering'} asset:`, error);
+      const errorMessage = error.response?.data?.error || error.message || `Failed to ${isEditMode ? 'update' : 'register'} asset`;
       setSubmitError(errorMessage);
       alert(`❌ Error: ${errorMessage}`);
     } finally {
@@ -336,6 +480,30 @@ const Register = () => {
     'Building',
     'Land',
     'Office Equipment'
+  ];
+
+  // Department options
+  const departments = [
+    'Administration',
+    'Finance',
+    'Human Resources',
+    'Information Technology',
+    'Marketing',
+    'Operations',
+    'Production',
+    'Sales',
+    'Security',
+    'Transport',
+    'Warehouse',
+    'Maintenance',
+    'Quality Assurance',
+    'Research & Development',
+    'Customer Service',
+    'Legal',
+    'Procurement',
+    'Facilities Management',
+    'Health & Safety',
+    'Training'
   ];
 
   // Subcategories based on category
@@ -379,35 +547,50 @@ const Register = () => {
             />
           </div>
           
-          
-          
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Asset Type</label>
-            <select
-              name="assetType"
-              value={formData.assetType || ''}
+            <label className="text-sm font-medium text-gray-700">Serial Number</label>
+            <input
+              type="text"
+              name="serialNumber"
+              value={formData.serialNumber || ''}
               onChange={handleInputChange}
+              placeholder="e.g., SN123456789"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select Type</option>
-              <option value="Laptop">Laptop</option>
-              <option value="Desktop">Desktop</option>
-              <option value="Monitor">Monitor</option>
-              <option value="Printer">Printer</option>
-              <option value="Projector">Projector</option>
-              <option value="Server">Server</option>
-              <option value="Network Device">Network Device</option>
-            </select>
+            />
           </div>
           
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Processor / RAM / Storage</label>
+            <label className="text-sm font-medium text-gray-700">Processor</label>
             <input
               type="text"
               name="processor"
               value={formData.processor || ''}
               onChange={handleInputChange}
-              placeholder="e.g., Intel i7, 16GB, 512GB SSD"
+              placeholder="e.g., Intel Core i7-13700H"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700">RAM</label>
+            <input
+              type="text"
+              name="ram"
+              value={formData.ram || ''}
+              onChange={handleInputChange}
+              placeholder="e.g., 16GB DDR5"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700">Storage</label>
+            <input
+              type="text"
+              name="storage"
+              value={formData.storage || ''}
+              onChange={handleInputChange}
+              placeholder="e.g., 512GB NVMe SSD"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
           </div>
@@ -443,7 +626,7 @@ const Register = () => {
               name="connectivity"
               value={formData.connectivity || ''}
               onChange={handleInputChange}
-              placeholder="e.g., WiFi, Bluetooth, HDMI"
+              placeholder="e.g., WiFi 6, Bluetooth 5.2, HDMI"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
           </div>
@@ -656,24 +839,6 @@ const Register = () => {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Machinery Type</label>
-            <select
-              name="machineryType"
-              value={formData.machineryType || ''}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select Type</option>
-              <option value="Industrial">Industrial</option>
-              <option value="Construction">Construction</option>
-              <option value="Agricultural">Agricultural</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Medical">Medical</option>
-              <option value="Laboratory">Laboratory</option>
-            </select>
-          </div>
-          
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700">Power Rating (kW/HP)</label>
             <input
@@ -889,25 +1054,6 @@ const Register = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Building Type</label>
-            <select
-              name="buildingType"
-              value={formData.buildingType || ''}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select Type</option>
-              <option value="Office">Office</option>
-              <option value="Warehouse">Warehouse</option>
-              <option value="Factory">Factory</option>
-              <option value="Retail Space">Retail Space</option>
-              <option value="Residential">Residential</option>
-              <option value="Storage">Storage</option>
-              <option value="Workshop">Workshop</option>
-            </select>
-          </div>
-          
-          <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700">Floor Area (sq ft)</label>
             <input
               type="text"
@@ -1039,24 +1185,6 @@ const Register = () => {
           </div>
           
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Land Use</label>
-            <select
-              name="landUse"
-              value={formData.landUse || ''}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select Land Use</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Residential">Residential</option>
-              <option value="Agricultural">Agricultural</option>
-              <option value="Industrial">Industrial</option>
-              <option value="Recreational">Recreational</option>
-              <option value="Vacant">Vacant</option>
-            </select>
-          </div>
-          
-          <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700">Zoning</label>
             <input
               type="text"
@@ -1137,25 +1265,6 @@ const Register = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Equipment Type</label>
-            <select
-              name="equipmentType"
-              value={formData.equipmentType || ''}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="">Select Type</option>
-              <option value="Photocopier">Photocopier</option>
-              <option value="Printer">Printer</option>
-              <option value="Scanner">Scanner</option>
-              <option value="Fax Machine">Fax Machine</option>
-              <option value="Shredder">Shredder</option>
-              <option value="Folding Machine">Folding Machine</option>
-              <option value="Telephone System">Telephone System</option>
-            </select>
-          </div>
-          
-          <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700">Power Consumption (W)</label>
             <input
               type="text"
@@ -1219,6 +1328,17 @@ const Register = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500">Loading asset data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -1228,9 +1348,11 @@ const Register = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <FileText size={24} className="text-blue-600" />
-            PPE Asset Registration
+            {isEditMode ? 'PPE Asset Edit' : 'PPE Asset Registration'}
           </h1>
-          <p className="text-gray-600 mt-1">Register new Property, Plant, and Equipment assets</p>
+          <p className="text-gray-600 mt-1">
+            {isEditMode ? 'Update existing Property, Plant, and Equipment asset' : 'Register new Property, Plant, and Equipment assets'}
+          </p>
         </div>
 
         {/* Form Card */}
@@ -1307,13 +1429,17 @@ const Register = () => {
                       value={formData.category}
                       onChange={(e) => handleCategoryChange(e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      disabled={isEditMode}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="">Select Category</option>
                       {categories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                    {isEditMode && (
+                      <p className="text-xs text-gray-500">Category cannot be changed in edit mode</p>
+                    )}
                   </div>
 
                   {/* Asset Subcategory */}
@@ -1351,6 +1477,26 @@ const Register = () => {
                       placeholder="Enter brand name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     />
+                  </div>
+
+                  {/* Department */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <Building size={16} className="text-gray-400" />
+                      Department <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="department"
+                      value={formData.department}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    >
+                      <option value="">Select Department</option>
+                      {departments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Current Status */}
@@ -1391,7 +1537,7 @@ const Register = () => {
                   className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium flex items-center gap-2"
                 >
                   <X size={18} />
-                  Reset
+                  {isEditMode ? 'Reset Changes' : 'Reset'}
                 </button>
                 <button
                   type="submit"
@@ -1401,7 +1547,7 @@ const Register = () => {
                   }`}
                 >
                   <Save size={18} />
-                  {isSubmitting ? 'Registering...' : 'Register Asset'}
+                  {isSubmitting ? (isEditMode ? 'Updating...' : 'Registering...') : (isEditMode ? 'Update Asset' : 'Register Asset')}
                 </button>
               </div>
             </div>

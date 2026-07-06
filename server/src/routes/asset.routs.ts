@@ -1,3 +1,4 @@
+// src/routes/asset.routes.ts
 import { Router, Request, Response } from 'express';
 import { AssetService } from '../services/asset.service.ts';
 import { AssetRegistrationData } from '../types/asset.types.ts';
@@ -11,10 +12,10 @@ router.post('/register', async (req: Request, res: Response) => {
     const data: AssetRegistrationData = req.body;
     
     // Validation
-    if (!data.assetName || !data.category || !data.status) {
+    if (!data.assetName || !data.category || !data.status || !data.department) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: assetName, category, and status are required'
+        error: 'Missing required fields: assetName, category, status, and department are required'
       });
     }
 
@@ -40,6 +41,7 @@ router.get('/', async (req: Request, res: Response) => {
       count: assets.length
     });
   } catch (error: any) {
+    console.error('Error fetching assets:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch assets'
@@ -69,14 +71,12 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
     
-    // Get category-specific details
-    const details = await assetService.getAssetDetails(id, asset.category_name);
-    
     res.json({
       success: true,
-      data: { ...asset, details }
+      data: asset
     });
   } catch (error: any) {
+    console.error('Error fetching asset:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch asset'
@@ -97,23 +97,25 @@ router.put('/:id', async (req: Request, res: Response) => {
       });
     }
     
-    const data = req.body;
+    const data: AssetRegistrationData = req.body;
     
-    const updated = await assetService.updateAsset(id, data);
-    
-    if (!updated) {
-      return res.status(404).json({
+    // Validation
+    if (!data.assetName || !data.category || !data.status || !data.department) {
+      return res.status(400).json({
         success: false,
-        error: 'Asset not found'
+        error: 'Missing required fields: assetName, category, status, and department are required'
       });
     }
+    
+    const result = await assetService.updateAsset(id, data);
     
     res.json({
       success: true,
       message: 'Asset updated successfully',
-      data: updated
+      data: result.data
     });
   } catch (error: any) {
+    console.error('Error updating asset:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to update asset'
@@ -148,6 +150,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
       message: 'Asset deleted successfully'
     });
   } catch (error: any) {
+    console.error('Error deleting asset:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to delete asset'

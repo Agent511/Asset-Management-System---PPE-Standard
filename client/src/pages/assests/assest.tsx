@@ -271,6 +271,31 @@ const Assets = () => {
     );
   };
 
+  const handleDelete = async (asset: Asset) => {
+    if (!window.confirm(`Are you sure you want to delete "${asset.asset_name}" (${asset.asset_code})? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/assets/${asset.id}`);
+      if (response.data.success) {
+        alert(`✅ Asset "${asset.asset_name}" deleted successfully`);
+        // Refresh the asset list
+        await fetchAssets();
+      } else {
+        alert('Failed to delete asset');
+      }
+    } catch (error) {
+      console.error('Error deleting asset:', error);
+      alert('Error deleting asset. Please try again.');
+    }
+  };
+
+  // Update the edit button to navigate to register with id
+  const handleEdit = (asset: Asset) => {
+    navigate(`/assets/register?id=${asset.id}`);
+  };
+
   // Handle QR Code print
   const handlePrintQR = (asset: Asset) => {
     setQrAsset(asset);
@@ -368,12 +393,14 @@ const Assets = () => {
               <Eye size={16} />
             </button>
             <button
+              onClick={() => handleEdit(asset)}
               className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
               title="Edit"
             >
               <Edit size={16} />
             </button>
             <button
+              onClick={() => handleDelete(asset)}
               className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
               title="Delete"
             >
